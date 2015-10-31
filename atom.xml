@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   
-  <title><![CDATA[何恩之有]]></title>
+  <title><![CDATA[HENNG]]></title>
   <subtitle><![CDATA[Viva La Vida]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://henng.com//"/>
-  <updated>2015-10-19T13:55:39.361Z</updated>
+  <updated>2015-10-31T09:26:26.996Z</updated>
   <id>http://henng.com//</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://henng.com/2015/10/19/inception/"/>
     <id>http://henng.com/2015/10/19/inception/</id>
     <published>2015-10-19T13:31:31.000Z</published>
-    <updated>2015-10-19T13:55:39.361Z</updated>
+    <updated>2015-10-31T09:26:26.996Z</updated>
     <content type="html"><![CDATA[<p><img src="http://note.youdao.com/yws/public/resource/5ea20fe8fb6ee68700837929c5c51b51/66835430DE8045F29E6E67417687782D" alt=""></p>
 <p>目前为止，保持得最好的一个习惯，大概是每周一部电影吧。<br><a id="more"></a></p>
 <p>偶然在网易云音乐上又听到 <em>Time</em>. 于是很自然地，便找来 Interstellar 的原声；又于是，在这个周末，重温了 Interstellar 和 Inception.</p>
@@ -28,7 +28,7 @@
 <p>在我眼里都是以大见小。什么是大？Interstellar 中的星际旅行是大，多维空间是大，宇宙、生命、时间和引力都是大；Inception 里盗梦、植梦是大，多层梦境是大；诺兰善于用很庞大很奇幻的概念和空间来构建体系，但他们其实都只表达了很小的东西，爱。而我们，会因为爱，做各种各样的事。无论是穿越整个星际去救你，还是去植梦以获得回家的权利，亦或只是一句问候、一次想念。</p>
 <p>我酷爱独处的乐趣，无拘无束，却在想要分享的时刻，感到落荒而逃。</p>
 <p>关了所有的灯。在寂静里，开始造自己的梦。Enjoy Time.</p>
-<embed src="http://music.163.com/style/swf/widget.swf?sid=1426503&type=2&auto=1&width=320&height=66" width="340" height="86" allownetworking="all">]]></content>
+<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="http://music.163.com/outchain/player?type=2&id=1426503&auto=1&height=66"></iframe>]]></content>
     <summary type="html">
     <![CDATA[<p><img src="http://note.youdao.com/yws/public/resource/5ea20fe8fb6ee68700837929c5c51b51/66835430DE8045F29E6E67417687782D" alt=""></p>
 <p>目前为止，保持得最好的一个习惯，大概是每周一部电影吧。<br>]]>
