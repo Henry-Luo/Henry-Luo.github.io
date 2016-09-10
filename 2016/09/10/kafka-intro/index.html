@@ -1,0 +1,58 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="description" content="何恩 何恩之有 HenryLuo Henry Luo Blog 生活 项目 编程 henng h3nng"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="alternative" href="http://henng.com/atom.xml" title="HENNG" type="application/atom+xml"><link rel="icon" href="images/favicon.ico"><title>kafka 简介 - HENNG</title><link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro"><link rel="stylesheet" href="/css/main.css" type="text/css"><!--[if lt IE 9]><script>(function(a,b){a="abbr article aside audio bdi canvas data datalist details dialog figcaption figure footer header hgroup main mark meter nav output progress section summary template time video".split(" ");for(b=a.length-1;b>=0;b--)document.createElement(a[b])})()</script><![endif]--></head><body><header class="head"><h1 class="head-title u-fl"><a href="/">HENNG</a></h1><nav class="head-nav u-fr"><ul class="head-nav__list"><li class="head-nav__item"><a href="/" class="head-nav__link">HOME</a></li><li class="head-nav__item"><a href="/archives" class="head-nav__link">ARCHIVES</a></li><li class="head-nav__item"><a href="/about" class="head-nav__link">ABOUT</a></li></ul></nav></header><main class="main"><article class="post"><header class="post__head"><time datetime="2016-09-10T11:30:23.000Z" class="post__time">九月 10, 2016</time><h1 class="post__title"><a href="/2016/09/10/kafka-intro/">kafka 简介</a></h1></header><div class="post__main echo"><p>作为 kafka 系列文章的第一篇，在这里我们根据 <code>5H法</code> 来介绍 kafka；这篇文章其实更像是官方文档的译文，毕竟官方文档的阐述才是最好的，但会加一些自己的补充说明；其次因为是开篇介绍，暂时不会太深入，只做简单说明。<a id="more"></a></p>
+<h2 id="WHAT_-_什么是_kafka">WHAT - 什么是 kafka</h2><blockquote>
+<p>kafka 是一个高吞吐的分布式消息系统。kafka最初是由 Linkedin 公司开发，后划入 Apache 名下并开源。据说当时负责开发的 leader 正在读 Franz Kafka 的书，所以给取了名字叫 <code>kafka</code>。</p>
+<p>基于 kafka，阐述几个关于消息系统的重要术语：</p>
+<ul>
+<li>topic: 消息的载体</li>
+<li>producer: 消息发送者</li>
+<li>consumer: 消息订阅者</li>
+<li>broker: 即 server，存放 topics</li>
+<li>cluster: 一个或多个 broker 组成的集群</li>
+</ul>
+<p>于是 kafka 的一个高度抽象的架构就出来了：</p>
+<p><img src="http://kafka.apache.org/images/producer_consumer.png" alt="kafka"></p>
+</blockquote>
+<h2 id="WHY_-_为什么是_kafka">WHY - 为什么是 kafka</h2><blockquote>
+<p>在 kafka 之前，已经有不少优秀的消息系统，例如 Rabbit MQ、 Active MQ，国内阿里的 MetaQ 等。那为什么 kafka 一下就火了呢？个人觉得 kafka 的火热离不开开源社区，尤其是 kafka 和其他开源项目（Storm、Spark、Hadoop、Flume等）的强强联合，构造了一个丰富强大的生态圈；当然 kafka 本身的优点也是原因之一，高吞吐、规模性、持久性、高可用等特性使其脱颖而出，这些在以后的文章中慢慢说明。</p>
+</blockquote>
+<h2 id="HOW_-_如何使用_kafka">HOW - 如何使用 kafka</h2><blockquote>
+<p>kafka 运行需要 zookeeper，所以需要先启动 zk：</p>
+<p>（1）启动 zk</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#62; bin/zookeeper-server-start.sh config/zookeeper.properties&#10;&#62;</span><br></pre></td></tr></table></figure>
+<p>（2）启动 kafka broker</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#62; bin/kafka-server-start.sh config/server.properties&#10;&#62;</span><br></pre></td></tr></table></figure>
+<p>（3）创建一个 topic</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#62; bin/kafka-topics.sh --create --zookeeper localhost:2181&#10; --replication-factor 1 --partitions 1 --topic test&#10;&#62;</span><br></pre></td></tr></table></figure>
+<p>（4）producer 发送消息</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#62; bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test &#10;&#62; This is a message&#10;&#62; This is another message&#10;&#62;</span><br></pre></td></tr></table></figure>
+<p>（5）consumer 消费消息</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#62; bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic test --from-beginning&#10;&#62; This is a message&#10;&#62; This is another message&#10;&#62;</span><br></pre></td></tr></table></figure>
+<p><em>以上为最简单的使用例子，其中涉及的参数以后会详细说明。</em></p>
+</blockquote>
+<h2 id="WHERE_-_什么样的环境">WHERE - 什么样的环境</h2><blockquote>
+<h4 id="磁盘">磁盘</h4><p>kafka 是高吞吐的消息系统，因此通常来说，磁盘是其一个瓶颈，对磁盘的转速要求还是比较高的，一般 7200 rpm 及以上。其次，是否做 RAID 取决于你的需求，做 RAID 的优点是会更稳定，这样更匹配 kafka 的数据备份容灾机制；缺点就是损失了不少磁盘容量空间。</p>
+<h4 id="系统">系统</h4><p>按照 kafka 官方的说法，kafka 在 Unix 系统上运行是最稳定的，在 Linux/Solaris 上也经过测试，运行良好（我在生产环境使用 kafka 的系统是 centos，目前还没有发现过因操作系统引起的问题）。而在 Windows 机器上，运行有一些问题。</p>
+</blockquote>
+<h2 id="WHEN_-_常见应用场景">WHEN - 常见应用场景</h2><blockquote>
+<h4 id="消息队列">消息队列</h4><p>这是 kafka 主要的应用场景，可以替代传统的消息队列。kafka 的高吞吐，对于大规模的消息处理系统来说也十分适合。</p>
+<h4 id="日志聚合">日志聚合</h4><p>通常用于搜集大量的日志集中处理，我司日志系统就是使用的我们维护的 kafka。高吞吐量可以解决大量的日志数据的性能问题，良好的实时性提供了查看实时日志的特性等。</p>
+<h4 id="流式处理">流式处理</h4><p>通常用于 “转移/传输” 数据。例如，从一个 RSS 源爬取了原始数据，然后推送到 kafka 某个 topic，接着经过去重、分类等再推送到了另一个 topic，最后才传到用户手中。可以和 Storm 等配合使用。</p>
+</blockquote>
+<ul>
+<li>[1] 欢迎交流探讨，指出不足；我也会不断完善这个系列的文章。</li>
+<li>[2] 参考链接：<a href="http://kafka.apache.org" target="_blank" rel="external">Apache Kafka</a></li>
+</ul>
+</div><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a href="/tags/kafka/" class="post__tag__link">kafka</a></li><li class="post__tag__item"><a href="/tags/原创/" class="post__tag__link">原创</a></li></ul><div style="margin-left:31em" data-thread-key="2016/09/10/kafka-intro/" data-title="kafka 简介" data-url="http://henng.com/2016/09/10/kafka-intro/" class="ds-share flat"><div class="ds-share-inline"><ul class="ds-share-icons-16"><li data-toggle="ds-share-icons-more"><a href="javascript:void(0);" class="ds-more">Share：</a></li><li><a href="javascript:void(0);" data-service="weibo" class="ds-weibo">微博</a></li><li><a href="javascript:void(0);" data-service="wechat" class="ds-wechat">微信</a></li><li><a href="javascript:void(0);" data-service="google" class="ds-google">Google+</a></li><li><a href="javascript:void(0);" data-service="twitter" class="ds-twitter">Twitter</a></li></ul><!--.ds-share-icons-more--></div></div><!--a.post__foot-link.u-fr(href = "http://service.weibo.com/share/share.php?title=" + post.title + " - " + config.title + "&url=http://henng.com" + config.root+post.path + "&ralateUid=2492134057&searchPic=true&style=number" target="_blank" )= theme.comment_link--></footer></article><div id="comments" class="comments"><div class="ds-thread"><!-- 多说公共JS代码 start (一个网页只需插入一次) --><script>var duoshuoQuery = {short_name:"henng"};
+(function() {
+  var ds = document.createElement('script');
+  ds.type = 'text/javascript';ds.async = true;
+  ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+  ds.charset = 'UTF-8';
+  document.getElementsByTagName('body')[0].appendChild(ds);
+})();</script><!-- 多说公共JS代码 end --></div></div></main><footer class="foot"><div class="foot-copy u-fl">&copy; 2016 Henry Luo<bdi> | Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> with theme <a href="https://github.com/unmric/hexo-theme-strict" target="_blank">strict</a></bdi></div><menu class="page-menu u-fr"><li class="page-menu__item"><span title="Previous" class="page-menu__link icon-arrow-left page-menu__link--disabled"> </span></li><li class="page-menu__item"><a title="Next" href="/2016/07/21/oneyear/" class="page-menu__link icon-arrow-right"> </a></li></menu></footer><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-54955970-2', 'auto');
+ga('send', 'pageview');
+</script></body></html>
