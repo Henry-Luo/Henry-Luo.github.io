@@ -1,0 +1,97 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="description" content="何恩 何恩之有 HenryLuo Henry Luo Blog 生活 项目 编程 henng h3nng"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="alternative" href="http://henng.com/atom.xml" title="HENNG" type="application/atom+xml"><link rel="icon" href="images/favicon.ico"><title>Pulsar 简介 - HENNG</title><link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro"><link rel="stylesheet" href="/css/main.css" type="text/css"><!--[if lt IE 9]><script>(function(a,b){a="abbr article aside audio bdi canvas data datalist details dialog figcaption figure footer header hgroup main mark meter nav output progress section summary template time video".split(" ");for(b=a.length-1;b>=0;b--)document.createElement(a[b])})()</script><![endif]--></head><body><header class="head"><h1 class="head-title u-fl"><a href="/">HENNG</a></h1><nav class="head-nav u-fr"><ul class="head-nav__list"><li class="head-nav__item"><a href="/" class="head-nav__link">HOME</a></li><li class="head-nav__item"><a href="/archives" class="head-nav__link">ARCHIVES</a></li><li class="head-nav__item"><a href="/about" class="head-nav__link">ABOUT</a></li></ul></nav></header><main class="main"><article class="post"><header class="post__head"><time datetime="2016-11-19T11:30:23.000Z" class="post__time">十一月 19, 2016</time><h1 class="post__title"><a href="/2016/11/19/pulsar-intro/">Pulsar 简介</a></h1></header><div class="post__main echo"><p>因为工作关系，会接触到不同类型的MQ。前段时间，调研了 Yahoo 开源的分布式消息中间件 - Pulsar。根据 Yahoo 的说法，Pulsar 诞生在 Kafka 之前，这就是他们为什么不用 Kafka 的原因。下面就介绍下 Pulsar 的各个方面。<a id="more"></a></p>
+<h3 id="主要特性">主要特性</h3><ul>
+<li>可水平扩展的集群（得益于 BookKeeper 的特性）</li>
+<li>强顺序和一致性保证</li>
+<li>低延迟</li>
+<li>负载均衡</li>
+<li>多租户/授权验证/配额</li>
+<li>跨地理位置的复制</li>
+</ul>
+<h3 id="快速入门">快速入门</h3><ul>
+<li><p>Topic</p>
+<p>Pulsar Topic 有点特别，格式如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">persistent://my-property/us-west/my-namespace/my-topic</span><br></pre></td></tr></table></figure>
+<p><code>persistent</code> 持久化的，目前唯一支持的存储类型，官方说未来可能支持 non-persistent 类型；</p>
+<p><code>my-property</code> Property 定义一个租户，可以理解为一个用户；</p>
+<p><code>us-west</code> Cluster，topic 所在的机房，地理位置；</p>
+<p><code>my-namespace</code> Namespace 定义多个同组的 topics，可以理解为一个应用；</p>
+<p><code>my-topic</code> Topic，最终的 Topic 名称，在代码里面也可能被称为 Destination。</p>
+<p>总结起来可以这么看：</p>
+<p><em>persistent://某个用户/地理机房/该用户的应用或业务/topic 名称</em></p>
+</li>
+<li><p>订阅模式</p>
+<p>Pulsar 支持三种订阅模式：</p>
+<ul>
+<li>Exclusive：无论有多少实例，只会有一个实例能消费，可以保证消息顺序；</li>
+<li>Shared：多个实例通过轮询方式各获得部分消息，不能保证消息顺序；</li>
+<li>Failover：类似于 Exclusive 方式，始终只会有一个实例消费，但其他实例在该实例挂掉的时候可以补上去，也可以保证消息顺序；</li>
+</ul>
+<p>实际上，Pulsar 也支持 Listener 模式，不过二者互斥，使用 Subscribe 就不能使用 Listener 了。</p>
+</li>
+<li><p>Demo</p>
+<p>直接看官方给的例子，非常简单，Pulsar 的 API 的确非常容易理解。目前官方提供 Java 版本，但其他语言的客户端也可以使用，Pulsar 有个 Websocket 模块负责和其他语言交互。在生产消费之前，你可以先起一个单例 server：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bin/pulsar standalone</span><br></pre></td></tr></table></figure>
+<p><strong>Producer</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">PulsarClient client = PulsarClient.create(<span class="string">"http://localhost:8080"</span>);</span><br><span class="line"></span><br><span class="line">Producer producer = client.createProducer(</span><br><span class="line">            <span class="string">"persistent://sample/standalone/ns1/my-topic"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Publish 10 messages to the topic</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">    producer.send(<span class="string">"my-message"</span>.getBytes());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">client.close();</span><br></pre></td></tr></table></figure>
+<p><strong>Consumer</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">PulsarClient client = PulsarClient.create(<span class="string">"http://localhost:8080"</span>);</span><br><span class="line"></span><br><span class="line">Consumer consumer = client.subscribe(</span><br><span class="line">            <span class="string">"persistent://sample/standalone/ns1/my-topic"</span>,</span><br><span class="line">            <span class="string">"my-subscribtion-name"</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">  <span class="comment">// Wait for a message</span></span><br><span class="line">  Message msg = consumer.receive();</span><br><span class="line"></span><br><span class="line">  System.out.println(<span class="string">"Received message: "</span> + msg.getData());</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Acknowledge the message so that it can be deleted by broker</span></span><br><span class="line">  consumer.acknowledge(msg);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">client.close();</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="架构设计">架构设计</h3><p><img src="https://github.com/yahoo/pulsar/raw/master/docs/img/pulsar_system_architecture.png" alt="Architecture"></p>
+<p>从上往下看，</p>
+<ul>
+<li><p>Producer/Consumer</p>
+<p>Java 客户端</p>
+</li>
+<li><p>Service discovery</p>
+<p>一个 HTTP 服务，提供 REST 接口，客户端先发送 HTTP 请求获取可用的服务器地址；</p>
+</li>
+<li><p>Dispatcher</p>
+<p>一个异步的 TCP 服务，派发调度消息；</p>
+</li>
+<li><p>Load Balancer</p>
+<p>负载均衡，通过CPU、Load等物理指标，以及 Pulsar Server 的服务指标，判断 Server 实例的负载情况，可用于自动将负载低的 Server 分配给某些 Topic；</p>
+</li>
+<li><p>Managed Ledger/BK Client/Cache</p>
+<p>Pulsar 使用了 Apache BookKeeper 作为它的存储服务，因此在 BK 之上开发了 Managed Ledger 这样一层 lib，封装了很多对 BK Client 的操作。例如 Managed Ledger 里面使用了多个 Ledgers，因为一个 Ledger 只能由单线程写，且在崩溃后为只读状态，必须使用多个 Ledgers 来保障正常写入，同时也是并发性能考虑。Pulsar 会先从 Cache 里面拿数据，当积压超过 Cache 上限，再通过 BK Client 从 BK 里读取数据；</p>
+</li>
+<li><p>Global replicators</p>
+<p>全局复制，这里主要指的是跨地理位置/跨机房的复制；主要原理就是从本地机房再转发一份数据到其他机房（跟正常的发送消息流程一样）；</p>
+</li>
+<li><p>Bookie</p>
+<p>上面提到，Pulsar 使用 BookKeeper 作为存储服务，Bookie 就是 BookKeeper 的存储服务实例；</p>
+</li>
+<li><p>ZK/Global ZK</p>
+<p>Pulsar 使用了多个 ZK，存储不同的数据：Global ZK 主要存储的例如 properties, namespaces 以及一些需要全局持久化的 policies；而 local ZK 主要存储本地集群相关数据，例如 topic 所有者元信息，server 的负载均衡结果，以及 BK Ledgers 的元信息数据等；</p>
+</li>
+</ul>
+<h3 id="客户端">客户端</h3><ul>
+<li><p>Produce</p>
+<p>发送支持 “同步” 和 “异步” 方式，但看代码其实底层实现都是 “异步” 接口。“同步” 会等待服务器确认消息，异步则直接返回，只是把消息放入队列（a blocking queue）异步发送。这里顺便提一下 Pulsar 使用的是 Java8，运用了很多 Java8 的新特性。</p>
+<p>消息支持 “LZ4”、“ZLIB” 两种压缩方式，以减少数据量节省带宽。支持批量发送。</p>
+</li>
+<li><p>Consume</p>
+<p>消费同样支持 “同步” 和 “异步” 方式，底层同样都是 “异步” 接口，只是回调的区别而已。“同步” 会一直阻塞直到有消息可用，异步则直接返回，消息到达时会调用其回调方法。</p>
+<p>消费的确认方式，可以一条消息一条消息的单独确认，也可以多个消息累计确认。使用累积确认时，只需对最后一条消息确认即可。需要注意的是，累积确认方式在 Shared 订阅模式下不可用。</p>
+<p>前面也提到过，消费支持 Listener，消息达到时，会传给自定义的监听器。</p>
+</li>
+<li><p>Partitioned Topic</p>
+<p>通常情况下，一个 topic 只能占据一个 server，这对于某些场景下来说，可能达不到要求的吞吐量性能。为了解决吞吐量，可以使用 Partitioned Topic，这点其实和 Kafka 很类似。对于 Pulsar 来说，Partitioned Topic 在内部其实等同于 N(N = Num of Partitions) 个普通 topic，订阅模式通用。</p>
+<p>同 Kafka 类似，可以选择不同的策略，来决定消息发往哪个 Partition，例如 Key Hash、Round Robin 等策略。</p>
+</li>
+</ul>
+<p>以上就是 Pulsar 的一点简介。至于Kafka，由于我接触的时候还是 0.8.2 版本，且正式环境使用的也是这个版本，企业图稳定不图更新，线上运行这么长的时间非常稳定，也没有贸然升级的计划。而目前 Kafka 已经迭代到 0.10.1 版本，更新了大量内容，重新设计了客户端，加入权限控制、Connector、Stream 等等，已经从传统意义的消息 MQ，升级为流处理平台。 因此我觉得 Kafka 系列可能就先到此为止，毕竟写出来也是有点过时了，但关于消息的那部分，应该还是万变不离其宗。如果你想沟通交流，可以和我联系。</p>
+</div><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a href="/tags/kafka/" class="post__tag__link">kafka</a></li><li class="post__tag__item"><a href="/tags/mq/" class="post__tag__link">mq</a></li><li class="post__tag__item"><a href="/tags/pulsar/" class="post__tag__link">pulsar</a></li><li class="post__tag__item"><a href="/tags/原创/" class="post__tag__link">原创</a></li></ul><div style="margin-left:31em" data-thread-key="2016/11/19/pulsar-intro/" data-title="Pulsar 简介" data-url="http://henng.com/2016/11/19/pulsar-intro/" class="ds-share flat"><div class="ds-share-inline"><ul class="ds-share-icons-16"><li data-toggle="ds-share-icons-more"><a href="javascript:void(0);" class="ds-more">Share：</a></li><li><a href="javascript:void(0);" data-service="weibo" class="ds-weibo">微博</a></li><li><a href="javascript:void(0);" data-service="wechat" class="ds-wechat">微信</a></li><li><a href="javascript:void(0);" data-service="google" class="ds-google">Google+</a></li><li><a href="javascript:void(0);" data-service="twitter" class="ds-twitter">Twitter</a></li></ul><!--.ds-share-icons-more--></div></div><!--a.post__foot-link.u-fr(href = "http://service.weibo.com/share/share.php?title=" + post.title + " - " + config.title + "&url=http://henng.com" + config.root+post.path + "&ralateUid=2492134057&searchPic=true&style=number" target="_blank" )= theme.comment_link--></footer></article><div id="comments" class="comments"><div class="ds-thread"><!-- 多说公共JS代码 start (一个网页只需插入一次) --><script>var duoshuoQuery = {short_name:"henng"};
+(function() {
+  var ds = document.createElement('script');
+  ds.type = 'text/javascript';ds.async = true;
+  ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+  ds.charset = 'UTF-8';
+  document.getElementsByTagName('body')[0].appendChild(ds);
+})();</script><!-- 多说公共JS代码 end --></div></div></main><footer class="foot"><div class="foot-copy u-fl">&copy; 2016 henng<bdi> | Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> with theme <a href="https://github.com/henng/lesss" target="_blank">lesss</a> based on <a href="https://github.com/unmric/hexo-theme-strict" target="_blank">strict</a></bdi></div><menu class="page-menu u-fr"><li class="page-menu__item"><span title="Previous" class="page-menu__link icon-arrow-left page-menu__link--disabled"> </span></li><li class="page-menu__item"><a title="Next" href="/2016/09/10/kafka-intro/" class="page-menu__link icon-arrow-right"> </a></li></menu></footer><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-54955970-2', 'auto');
+ga('send', 'pageview');
+</script></body></html>
