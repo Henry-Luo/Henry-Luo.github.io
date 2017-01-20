@@ -1,0 +1,64 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="description" content="何恩 何恩之有 HenryLuo Henry Luo Blog 生活 项目 编程 henng h3nng"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="alternative" href="http://henng.com/atom.xml" title="HENNG" type="application/atom+xml"><link rel="icon" href="images/favicon.ico"><title>BookKeeper - HENNG</title><link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro"><link rel="stylesheet" href="/css/main.css" type="text/css"><!--[if lt IE 9]><script>(function(a,b){a="abbr article aside audio bdi canvas data datalist details dialog figcaption figure footer header hgroup main mark meter nav output progress section summary template time video".split(" ");for(b=a.length-1;b>=0;b--)document.createElement(a[b])})()</script><![endif]--></head><body><header class="head"><h1 class="head-title u-fl"><a href="/">HENNG</a></h1><nav class="head-nav u-fr"><ul class="head-nav__list"><li class="head-nav__item"><a href="/" class="head-nav__link">HOME</a></li><li class="head-nav__item"><a href="/archives" class="head-nav__link">ARCHIVES</a></li><li class="head-nav__item"><a href="/about" class="head-nav__link">ABOUT</a></li></ul></nav></header><main class="main"><article class="post"><header class="post__head"><time datetime="2017-01-20T10:13:46.000Z" class="post__time">一月 20, 2017</time><h1 class="post__title"><a href="/2017/01/20/bookkeeper/">BookKeeper</a></h1></header><div class="post__main echo"><blockquote>
+<p>之前写了一篇关于 <a href="https://github.com/yahoo/pulsar" target="_blank" rel="external">Pulsar</a> 的简介，Pulsar 的存储这块使用了 Bookkeeper来完成，所以再简单介绍下 Bookkeeper。当时用英文写的，就懒得翻译了，看懂应该完全没问题。<a id="more"></a></p>
+</blockquote>
+<h2 id="Introduction_/_Key_Terms">Introduction / Key Terms</h2><p>BookKeeper is a replicated log service which can be used to build <em>replicated state machines.</em> </p>
+<p>Main Features</p>
+<ul>
+<li>writing efficiently (by sequentially)</li>
+<li>replicating for fault tolerance</li>
+<li>scaling throughput</li>
+</ul>
+<p>Key Terms:</p>
+<ul>
+<li><strong>bookie</strong>: bokkeeper storage server</li>
+<li><strong>ledger</strong>: log stream(a sequence of entries)</li>
+<li>ledger <strong>entry</strong>: each unit of a log(record)</li>
+<li><strong>ensemble</strong>: group of bookies</li>
+<li><strong>quorums</strong>: replicas of entries(num of avaliable bookies)</li>
+</ul>
+<p>Here is a brief architecture diagram of bookkeeper.</p>
+<p><img src="http://dl2.iteye.com/upload/attachment/0059/9489/9e5ce5f8-a69b-39b3-8727-48e5f69d3d94.jpg" alt="bookkeeper architecture"></p>
+<h2 id="Write_/_Read">Write / Read</h2><p>Typically, we use bookkeeper by the following steps.</p>
+<ol>
+<li><p>Create a bookkeeper client;</p>
+</li>
+<li><p>Create a ledger;</p>
+</li>
+<li><p>Write to the ledger (add entries);</p>
+</li>
+<li><p>Close the ledger;</p>
+<p>​</p>
+</li>
+<li><p>Open the same ledger for reading (by ledgerId);</p>
+</li>
+<li><p>Read from the ledger;</p>
+</li>
+<li><p>Close the ledger again;</p>
+</li>
+<li><p>Close the bookkeeper client.</p>
+</li>
+</ol>
+<p>A quick demo is ready for you.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BookKeeperDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LoggerFactory.getLogger(BookKeeperDemo.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String PASSWD = <span class="string">"passwd"</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Charset Encoding = Charsets.UTF_8;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sampleTest</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        BookKeeper bookKeeper = <span class="keyword">new</span> BookKeeper(<span class="string">"localhost:2181"</span>);</span><br><span class="line">        LedgerHandle ledger = bookKeeper.createLedger(BookKeeper.DigestType.MAC, PASSWD.getBytes());</span><br><span class="line">        <span class="keyword">long</span> ledgerId = ledger.getId();</span><br><span class="line">        logger.info(<span class="string">"Writing to ledger: &#123;&#125;"</span>, ledgerId);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">            String content = <span class="string">"entry-"</span> + i;</span><br><span class="line">            ledger.addEntry(content.getBytes(Encoding));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ledger.close();</span><br><span class="line"></span><br><span class="line">        ledger = bookKeeper.openLedger(ledgerId, BookKeeper.DigestType.MAC, PASSWD.getBytes());</span><br><span class="line"></span><br><span class="line">        Enumeration&lt;LedgerEntry&gt; entries = ledger.readEntries(<span class="number">0</span>, <span class="number">9</span>);</span><br><span class="line">        <span class="keyword">while</span> (entries.hasMoreElements()) &#123;</span><br><span class="line">            LedgerEntry entry = entries.nextElement();</span><br><span class="line">            String content = <span class="keyword">new</span> String(entry.getEntry(), Encoding);</span><br><span class="line">            logger.info(<span class="string">"Entry &#123;&#125;  length=&#123;&#125; content='&#123;&#125;'"</span>, entry.getEntryId(), entry.getLength(), content);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ledger.close();</span><br><span class="line">      	bookKeeper.close();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>It is worth nothing that only one process can write to a ledger (append), and it would be read-only after ledger is closed by normally or there is an exception. What happened when adding entries? First it will append EntryLog, then recording the related index in LedgerCache which is used for fast lookup, last transaction log is appended in Journal. LedgerHandler created a node in zookeeper for metadata, so it will knows who has my data.</p>
+<p>While reading could only execute after a ledger is closed, and it will be requested to next bookie when first read found an entry is invalid.</p>
+<h2 id="Recovery">Recovery</h2><p>As closing a ledger consists essentially of writing the last entry written to a ledger to zookeeper, the recovery procedure simply finds the last entry written correctly and writes it to zookeeper.</p>
+<p>There are two kinds of recovery, by automatically which is the default way and by manually. Auditor is selected as a leader to watch zookeeper, scan and decide which need recovery. Auditor will create nodes in zookeeper when recovery needed, and ReplicationWorker watching the nodes created by Auditor, then the worker will start related tasks for the job.</p>
+<h2 id="Performance">Performance</h2><p>There is a <a href="https://cwiki.apache.org/confluence/download/attachments/27832576/bookkeeper-hic-2011.pdf?version=1&amp;modificationDate=1322809384000" target="_blank" rel="external">reference</a> by Yahoo at Hadoop in China 2011.</p>
+<h2 id="Pulsar_/_Managed-Ledger">Pulsar / Managed-Ledger</h2><p>How Pulsar uses bookkeeper? Pulsar created a library on top of bookkeeper ledger, which is called ManagedLedger, multi ledgers included. It opens(creates a new on if not exists) a ledger when creating persistent topic, adds entries when publishing messages, and reads entries(cache first, reads entries if cache oversize) when dispatching messages.</p>
+<hr>
+<p><strong>References</strong><br>[1] <a href="https://github.com/yahoo/pulsar" target="_blank" rel="external">Pulsar Github</a><br>[2] <a href="http://bookkeeper.apache.org/" target="_blank" rel="external">Apache BookKeeper</a></p>
+</div><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a href="/tags/bookkeeper/" class="post__tag__link">bookkeeper</a></li><li class="post__tag__item"><a href="/tags/mq/" class="post__tag__link">mq</a></li><li class="post__tag__item"><a href="/tags/pulsar/" class="post__tag__link">pulsar</a></li><li class="post__tag__item"><a href="/tags/原创/" class="post__tag__link">原创</a></li></ul><div style="margin-left:31em" data-thread-key="2017/01/20/bookkeeper/" data-title="BookKeeper" data-url="http://henng.com/2017/01/20/bookkeeper/" class="ds-share flat"><div class="ds-share-inline"><ul class="ds-share-icons-16"><li data-toggle="ds-share-icons-more"><a href="javascript:void(0);" class="ds-more">Share：</a></li><li><a href="javascript:void(0);" data-service="weibo" class="ds-weibo">微博</a></li><li><a href="javascript:void(0);" data-service="wechat" class="ds-wechat">微信</a></li><li><a href="javascript:void(0);" data-service="google" class="ds-google">Google+</a></li><li><a href="javascript:void(0);" data-service="twitter" class="ds-twitter">Twitter</a></li></ul><!--.ds-share-icons-more--></div></div><!--a.post__foot-link.u-fr(href = "http://service.weibo.com/share/share.php?title=" + post.title + " - " + config.title + "&url=http://henng.com" + config.root+post.path + "&ralateUid=2492134057&searchPic=true&style=number" target="_blank" )= theme.comment_link--></footer></article><div id="comments" class="comments"><div class="ds-thread"><!-- 多说公共JS代码 start (一个网页只需插入一次) --><script>var duoshuoQuery = {short_name:"henng"};
+(function() {
+  var ds = document.createElement('script');
+  ds.type = 'text/javascript';ds.async = true;
+  ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+  ds.charset = 'UTF-8';
+  document.getElementsByTagName('body')[0].appendChild(ds);
+})();</script><!-- 多说公共JS代码 end --></div></div></main><footer class="foot"><div class="foot-copy u-fl">&copy; 2017 henng<bdi> | Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> with theme <a href="https://github.com/henng/lesss" target="_blank">lesss</a> based on <a href="https://github.com/unmric/hexo-theme-strict" target="_blank">strict</a></bdi></div><menu class="page-menu u-fr"><li class="page-menu__item"><span title="Previous" class="page-menu__link icon-arrow-left page-menu__link--disabled"> </span></li><li class="page-menu__item"><a title="Next" href="/2016/11/19/pulsar-intro/" class="page-menu__link icon-arrow-right"> </a></li></menu></footer><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-54955970-2', 'auto');
+ga('send', 'pageview');
+</script></body></html>

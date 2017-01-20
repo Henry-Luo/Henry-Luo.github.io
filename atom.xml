@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Viva La Vida]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://henng.com//"/>
-  <updated>2016-11-19T15:23:34.000Z</updated>
+  <updated>2017-01-20T10:21:17.060Z</updated>
   <id>http://henng.com//</id>
   
   <author>
@@ -16,11 +16,84 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[BookKeeper]]></title>
+    <link href="http://henng.com/2017/01/20/bookkeeper/"/>
+    <id>http://henng.com/2017/01/20/bookkeeper/</id>
+    <published>2017-01-20T10:13:46.000Z</published>
+    <updated>2017-01-20T10:21:17.060Z</updated>
+    <content type="html"><![CDATA[<blockquote>
+<p>之前写了一篇关于 <a href="https://github.com/yahoo/pulsar" target="_blank" rel="external">Pulsar</a> 的简介，Pulsar 的存储这块使用了 Bookkeeper来完成，所以再简单介绍下 Bookkeeper。当时用英文写的，就懒得翻译了，看懂应该完全没问题。<a id="more"></a></p>
+</blockquote>
+<h2 id="Introduction_/_Key_Terms">Introduction / Key Terms</h2><p>BookKeeper is a replicated log service which can be used to build <em>replicated state machines.</em> </p>
+<p>Main Features</p>
+<ul>
+<li>writing efficiently (by sequentially)</li>
+<li>replicating for fault tolerance</li>
+<li>scaling throughput</li>
+</ul>
+<p>Key Terms:</p>
+<ul>
+<li><strong>bookie</strong>: bokkeeper storage server</li>
+<li><strong>ledger</strong>: log stream(a sequence of entries)</li>
+<li>ledger <strong>entry</strong>: each unit of a log(record)</li>
+<li><strong>ensemble</strong>: group of bookies</li>
+<li><strong>quorums</strong>: replicas of entries(num of avaliable bookies)</li>
+</ul>
+<p>Here is a brief architecture diagram of bookkeeper.</p>
+<p><img src="http://dl2.iteye.com/upload/attachment/0059/9489/9e5ce5f8-a69b-39b3-8727-48e5f69d3d94.jpg" alt="bookkeeper architecture"></p>
+<h2 id="Write_/_Read">Write / Read</h2><p>Typically, we use bookkeeper by the following steps.</p>
+<ol>
+<li><p>Create a bookkeeper client;</p>
+</li>
+<li><p>Create a ledger;</p>
+</li>
+<li><p>Write to the ledger (add entries);</p>
+</li>
+<li><p>Close the ledger;</p>
+<p>​</p>
+</li>
+<li><p>Open the same ledger for reading (by ledgerId);</p>
+</li>
+<li><p>Read from the ledger;</p>
+</li>
+<li><p>Close the ledger again;</p>
+</li>
+<li><p>Close the bookkeeper client.</p>
+</li>
+</ol>
+<p>A quick demo is ready for you.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BookKeeperDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Logger logger = LoggerFactory.getLogger(BookKeeperDemo.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String PASSWD = <span class="string">"passwd"</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Charset Encoding = Charsets.UTF_8;</span><br><span class="line"></span><br><span class="line">    <span class="annotation">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sampleTest</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        BookKeeper bookKeeper = <span class="keyword">new</span> BookKeeper(<span class="string">"localhost:2181"</span>);</span><br><span class="line">        LedgerHandle ledger = bookKeeper.createLedger(BookKeeper.DigestType.MAC, PASSWD.getBytes());</span><br><span class="line">        <span class="keyword">long</span> ledgerId = ledger.getId();</span><br><span class="line">        logger.info(<span class="string">"Writing to ledger: &#123;&#125;"</span>, ledgerId);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">            String content = <span class="string">"entry-"</span> + i;</span><br><span class="line">            ledger.addEntry(content.getBytes(Encoding));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ledger.close();</span><br><span class="line"></span><br><span class="line">        ledger = bookKeeper.openLedger(ledgerId, BookKeeper.DigestType.MAC, PASSWD.getBytes());</span><br><span class="line"></span><br><span class="line">        Enumeration&lt;LedgerEntry&gt; entries = ledger.readEntries(<span class="number">0</span>, <span class="number">9</span>);</span><br><span class="line">        <span class="keyword">while</span> (entries.hasMoreElements()) &#123;</span><br><span class="line">            LedgerEntry entry = entries.nextElement();</span><br><span class="line">            String content = <span class="keyword">new</span> String(entry.getEntry(), Encoding);</span><br><span class="line">            logger.info(<span class="string">"Entry &#123;&#125;  length=&#123;&#125; content='&#123;&#125;'"</span>, entry.getEntryId(), entry.getLength(), content);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ledger.close();</span><br><span class="line">      	bookKeeper.close();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>It is worth nothing that only one process can write to a ledger (append), and it would be read-only after ledger is closed by normally or there is an exception. What happened when adding entries? First it will append EntryLog, then recording the related index in LedgerCache which is used for fast lookup, last transaction log is appended in Journal. LedgerHandler created a node in zookeeper for metadata, so it will knows who has my data.</p>
+<p>While reading could only execute after a ledger is closed, and it will be requested to next bookie when first read found an entry is invalid.</p>
+<h2 id="Recovery">Recovery</h2><p>As closing a ledger consists essentially of writing the last entry written to a ledger to zookeeper, the recovery procedure simply finds the last entry written correctly and writes it to zookeeper.</p>
+<p>There are two kinds of recovery, by automatically which is the default way and by manually. Auditor is selected as a leader to watch zookeeper, scan and decide which need recovery. Auditor will create nodes in zookeeper when recovery needed, and ReplicationWorker watching the nodes created by Auditor, then the worker will start related tasks for the job.</p>
+<h2 id="Performance">Performance</h2><p>There is a <a href="https://cwiki.apache.org/confluence/download/attachments/27832576/bookkeeper-hic-2011.pdf?version=1&amp;modificationDate=1322809384000" target="_blank" rel="external">reference</a> by Yahoo at Hadoop in China 2011.</p>
+<h2 id="Pulsar_/_Managed-Ledger">Pulsar / Managed-Ledger</h2><p>How Pulsar uses bookkeeper? Pulsar created a library on top of bookkeeper ledger, which is called ManagedLedger, multi ledgers included. It opens(creates a new on if not exists) a ledger when creating persistent topic, adds entries when publishing messages, and reads entries(cache first, reads entries if cache oversize) when dispatching messages.</p>
+<hr>
+<p><strong>References</strong><br>[1] <a href="https://github.com/yahoo/pulsar" target="_blank" rel="external">Pulsar Github</a><br>[2] <a href="http://bookkeeper.apache.org/" target="_blank" rel="external">Apache BookKeeper</a></p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<blockquote>
+<p>之前写了一篇关于 <a href="https://github.com/yahoo/pulsar">Pulsar</a> 的简介，Pulsar 的存储这块使用了 Bookkeeper来完成，所以再简单介绍下 Bookkeeper。当时用英文写的，就懒得翻译了，看懂应该完全没问题。]]>
+    
+    </summary>
+    
+      <category term="bookkeeper" scheme="http://henng.com/tags/bookkeeper/"/>
+    
+      <category term="mq" scheme="http://henng.com/tags/mq/"/>
+    
+      <category term="pulsar" scheme="http://henng.com/tags/pulsar/"/>
+    
+      <category term="原创" scheme="http://henng.com/tags/%E5%8E%9F%E5%88%9B/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[Pulsar 简介]]></title>
     <link href="http://henng.com/2016/11/19/pulsar-intro/"/>
     <id>http://henng.com/2016/11/19/pulsar-intro/</id>
-    <published>2016-11-19T11:30:23.000Z</published>
-    <updated>2016-11-19T15:23:34.000Z</updated>
+    <published>2016-11-19T19:30:23.000Z</published>
+    <updated>2016-11-19T15:23:34.083Z</updated>
     <content type="html"><![CDATA[<p>因为工作关系，会接触到不同类型的MQ。前段时间，调研了 Yahoo 开源的分布式消息中间件 - Pulsar。根据 Yahoo 的说法，Pulsar 诞生在 Kafka 之前，这就是他们为什么不用 Kafka 的原因。下面就介绍下 Pulsar 的各个方面。<a id="more"></a></p>
 <h3 id="主要特性">主要特性</h3><ul>
 <li>可水平扩展的集群（得益于 BookKeeper 的特性）</li>
@@ -124,8 +197,8 @@
     <title><![CDATA[kafka 简介]]></title>
     <link href="http://henng.com/2016/09/10/kafka-intro/"/>
     <id>http://henng.com/2016/09/10/kafka-intro/</id>
-    <published>2016-09-10T11:30:23.000Z</published>
-    <updated>2016-11-19T15:24:23.000Z</updated>
+    <published>2016-09-10T19:30:23.000Z</published>
+    <updated>2016-11-19T15:24:23.676Z</updated>
     <content type="html"><![CDATA[<p>作为 kafka 系列文章的第一篇，在这里我们根据 <code>5H法</code> 来介绍 kafka；这篇文章其实更像是官方文档的译文，毕竟官方文档的阐述才是最好的，但会加一些自己的补充说明；其次因为是开篇介绍，暂时不会太深入，只做简单说明。<a id="more"></a></p>
 <h2 id="WHAT_-_什么是_kafka">WHAT - 什么是 kafka</h2><blockquote>
 <p>kafka 是一个高吞吐的分布式消息系统。kafka最初是由 Linkedin 公司开发，后划入 Apache 名下并开源。据说当时负责开发的 leader 正在读 Franz Kafka 的书，所以给取了名字叫 <code>kafka</code>。</p>
@@ -188,8 +261,8 @@
     <title><![CDATA[一年]]></title>
     <link href="http://henng.com/2016/07/21/oneyear/"/>
     <id>http://henng.com/2016/07/21/oneyear/</id>
-    <published>2016-07-21T13:35:09.000Z</published>
-    <updated>2016-07-21T13:36:48.000Z</updated>
+    <published>2016-07-21T21:35:09.000Z</published>
+    <updated>2016-07-21T13:36:48.967Z</updated>
     <content type="html"><![CDATA[<p>昨天，在京城一场少见的暴雨中，迎来了工作满一年的日子。去年同一天，签下人生第一份正式劳务合同，也就这么迈入上班族，这么挤入这个社会。</p>
 <p>人总要在特殊的日子里，记些什么。<a id="more"></a></p>
 <h2 id="关于工作">关于工作</h2><p>从工作中收获颇丰，主要还是自己专业技能的提升和职场经验的积累。其实现在的工作内容并非我当初的意向岗位，但我并没有排斥，因为我明白对于职场新人，磨练和增长技能才是最重要的，何况项目组有不少老员工，我可以学习。事实证明选择是正确的，团队氛围融洽，同事都很好相处，leader 也还算照顾我这种新人，学到很多，也非常感激。还记得第一天到公司报道就给我派任务了，说是要从实际编码中熟悉工作。刚开始什么都不太懂，公司的业务、开发的环境以及常规的流程，都还是未知。第一个任务前前后后差不多做了一个月，现在回过头去看，是比较简单的一个任务，最多一周搞定，这就是成长。</p>
@@ -214,8 +287,8 @@
     <title><![CDATA[我为什么愤怒]]></title>
     <link href="http://henng.com/2016/05/14/why-angry/"/>
     <id>http://henng.com/2016/05/14/why-angry/</id>
-    <published>2016-05-14T02:20:55.000Z</published>
-    <updated>2016-05-14T02:34:28.000Z</updated>
+    <published>2016-05-14T10:20:55.000Z</published>
+    <updated>2016-05-14T02:34:28.463Z</updated>
     <content type="html"><![CDATA[<blockquote>
 <p>为一片叶的飘落<br>在他理应翡绿的清晨</p>
 <p>为一颗星的黯淡<br>在他理应光鲜的明夜<br><a id="more"></a></p>
@@ -240,8 +313,8 @@
     <title><![CDATA[Forward]]></title>
     <link href="http://henng.com/2016/02/20/self-examination/"/>
     <id>http://henng.com/2016/02/20/self-examination/</id>
-    <published>2016-02-20T15:07:14.000Z</published>
-    <updated>2016-02-20T15:43:58.000Z</updated>
+    <published>2016-02-20T23:07:14.000Z</published>
+    <updated>2016-02-20T15:43:58.719Z</updated>
     <content type="html"><![CDATA[<blockquote>
 <p>What doesn’t kill you make you stronger.</p>
 </blockquote>
@@ -271,8 +344,8 @@
     <title><![CDATA[致我们共同的24号]]></title>
     <link href="http://henng.com/2015/12/04/dear-kobe/"/>
     <id>http://henng.com/2015/12/04/dear-kobe/</id>
-    <published>2015-12-04T15:55:35.000Z</published>
-    <updated>2016-04-23T06:40:20.000Z</updated>
+    <published>2015-12-04T23:55:35.000Z</published>
+    <updated>2016-04-23T06:40:20.759Z</updated>
     <content type="html"><![CDATA[<p><img src="http://static.zybuluo.com/Henry/pzetifpjhesq6gndaxs3od2m/Untitled-911-1440x688.jpg" alt=""></p>
 <p>2015年11月30日，在11月的最后一天，你终于说出了，“本赛季将是我的最后一个赛季”。</p>
 <p>这一刻，终究来了。算一算，差不多正好十年。</p>
@@ -303,8 +376,8 @@
     <title><![CDATA[山河故人]]></title>
     <link href="http://henng.com/2015/11/01/Mountains-May-Depart/"/>
     <id>http://henng.com/2015/11/01/Mountains-May-Depart/</id>
-    <published>2015-10-31T16:19:41.000Z</published>
-    <updated>2015-10-31T16:41:13.000Z</updated>
+    <published>2015-11-01T00:19:41.000Z</published>
+    <updated>2015-10-31T16:41:13.166Z</updated>
     <content type="html"><![CDATA[<p>有人说《山河故人》里的贾樟柯变了，变得故作玄虚，卖弄元素，讨好西方。可能越来越挑，可能为了吐槽而吐槽，一千个读者就有一千个哈姆雷特。</p>
 <p>我这个哈姆雷特并不了解贾樟柯。</p>
 <p>影片开头，怎么看怎么不像 20 来岁的 3 个人，以及他们之间的三角恋。经典而又狗血的高富帅与屌丝，外加女神的剧情，即使拍得如此乡土气息，也差点儿让我摇头叹息。当然，最终并没有违背女神投入高富帅怀抱的定理。<br><a id="more"></a></p>
@@ -331,8 +404,8 @@
     <title><![CDATA[Inception]]></title>
     <link href="http://henng.com/2015/10/19/inception/"/>
     <id>http://henng.com/2015/10/19/inception/</id>
-    <published>2015-10-19T13:31:31.000Z</published>
-    <updated>2016-04-23T06:43:39.000Z</updated>
+    <published>2015-10-19T21:31:31.000Z</published>
+    <updated>2016-04-23T06:43:39.787Z</updated>
     <content type="html"><![CDATA[<p><img src="http://static.zybuluo.com/Henry/qgqkfi0ofsj1kfakjxxh7od8/p593669694.jpg" alt=""></p>
 <p>目前为止，保持得最好的一个习惯，大概是每周一部电影吧。<br><a id="more"></a></p>
 <p>偶然在网易云音乐上又听到 <em>Time</em>. 于是很自然地，便找来 Interstellar 的原声；又于是，在这个周末，重温了 Interstellar 和 Inception.</p>
@@ -355,8 +428,8 @@
     <title><![CDATA[我]]></title>
     <link href="http://henng.com/2015/09/13/me/"/>
     <id>http://henng.com/2015/09/13/me/</id>
-    <published>2015-09-13T15:04:13.000Z</published>
-    <updated>2015-09-13T15:10:44.000Z</updated>
+    <published>2015-09-13T23:04:13.000Z</published>
+    <updated>2015-09-13T15:10:44.064Z</updated>
     <content type="html"><![CDATA[<blockquote>
 <p>麻痹呆滞的杰克是我<br>但不仅仅是我<br>叛逆张扬的泰勒也是我<br>但不仅仅是我</p>
 <p>手握六便士的是我<br>但不仅仅是我<br>抬头看月亮的也是我<br>但不仅仅是我<br><a id="more"></a></p>
@@ -381,8 +454,8 @@
     <title><![CDATA[将 Hexo 配置到云端]]></title>
     <link href="http://henng.com/2015/06/28/cloud-hexo/"/>
     <id>http://henng.com/2015/06/28/cloud-hexo/</id>
-    <published>2015-06-28T06:28:26.000Z</published>
-    <updated>2016-04-23T07:03:05.000Z</updated>
+    <published>2015-06-28T14:28:26.000Z</published>
+    <updated>2016-04-23T07:03:05.419Z</updated>
     <content type="html"><![CDATA[<p>将 Hexo 环境放在云端，不用担心换了电脑，也不用担心系统平台不一样，只需要网络即可，一劳永逸。</p>
 <p>因为换了新系统，又得重新配置 Hexo 博客环境。于是就想到，对于经常重装系统的同学来说，老是要重新配置 Hexo 就很麻烦；另外一点缺陷是在本地的 Hexo 只能在自己电脑上更新文章，如果出去在外地，换了一台电脑就没法更新文章了。如果能把 Hexo 配置到云端就好了，这样有网络就可以搞定，且不受系统平台的限制。</p>
 <p>搜索了一圈，发现还是有人这么干的。不过相关的帖子好像不多，干货更少。主要发现两个工具:</p>
@@ -455,8 +528,8 @@
     <title><![CDATA[在 Android Studio 中使用代理]]></title>
     <link href="http://henng.com/2015/06/27/hxgy/"/>
     <id>http://henng.com/2015/06/27/hxgy/</id>
-    <published>2015-06-27T13:34:32.000Z</published>
-    <updated>2016-04-23T07:09:55.000Z</updated>
+    <published>2015-06-27T21:34:32.000Z</published>
+    <updated>2016-04-23T07:09:55.043Z</updated>
     <content type="html"><![CDATA[<p>最近换了新系统，在重装 Android Studio 的时候，发现一个公益代理。在很多地方都需要用到代理，如果你有自己的代理当然很方便。这里主要是 “安利” 一个公益代理（代理也有公益，真是感激涕零。。）它来自 <a href="http://help.honx.in/posts/view/32854/" target="_blank" rel="external">红杏公益代理</a>。专门是给开发人员使用的，程序猿再次泪奔🙏。</p>
 <p>红杏官方如是说：<br><a id="more"></a></p>
 <blockquote>
@@ -485,8 +558,8 @@
     <title><![CDATA[SSH 集合框架应用实例]]></title>
     <link href="http://henng.com/2015/06/04/ssh/"/>
     <id>http://henng.com/2015/06/04/ssh/</id>
-    <published>2015-06-04T03:08:54.000Z</published>
-    <updated>2016-04-23T07:45:59.000Z</updated>
+    <published>2015-06-04T11:08:54.000Z</published>
+    <updated>2016-04-23T07:45:59.363Z</updated>
     <content type="html"><![CDATA[<blockquote>
 <p>本课程是基于 <a href="https://www.shiyanlou.com" target="_blank" rel="external">实验楼</a> 线上环境制作的，因此文档叙述和截图均与其有关。使用其他实验环境也没有太大影响，实验步骤是类似的。</p>
 </blockquote>
@@ -625,8 +698,8 @@
     <title><![CDATA[Hibernate 框架]]></title>
     <link href="http://henng.com/2015/06/04/hibernate/"/>
     <id>http://henng.com/2015/06/04/hibernate/</id>
-    <published>2015-06-04T02:59:13.000Z</published>
-    <updated>2016-04-23T10:42:07.000Z</updated>
+    <published>2015-06-04T10:59:13.000Z</published>
+    <updated>2016-04-23T10:42:07.871Z</updated>
     <content type="html"><![CDATA[<p>Hibernate 是一个开源的对象关系映射框架，对 JDBC 进行了非常轻量级的对象封装，使得 Java 程序员可以随心所欲的使用对象编程思维来操纵数据库。Hibernate 可以应用在任何使用 JDBC 的场合。</p>
 <p>直达 <a href="https://www.shiyanlou.com/teacher/courses/34" target="_blank" rel="external">Hibernate 框架教程</a>。<a id="more"></a></p>
 ]]></content>
@@ -646,8 +719,8 @@
     <title><![CDATA[网页版大白 - Baymax]]></title>
     <link href="http://henng.com/2015/05/13/baymax/"/>
     <id>http://henng.com/2015/05/13/baymax/</id>
-    <published>2015-05-13T08:33:08.000Z</published>
-    <updated>2016-04-23T07:51:56.000Z</updated>
+    <published>2015-05-13T16:33:08.000Z</published>
+    <updated>2016-04-23T07:51:56.379Z</updated>
     <content type="html"><![CDATA[<h2 id="查看_Demo"><a href="http://henng.com/baymax/Baymax.html"> 查看 Demo </a></h2><p>利用 HTML 和 CSS 完成的 Baymax，比较简单，以下是完整代码。<a id="more"></a></p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="doctype">&lt;!doctype html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">html</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="title">head</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="title">title</span>&gt;</span>Baymax<span class="tag">&lt;/<span class="title">title</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="title">style</span>&gt;</span><span class="css"></span><br><span class="line"><span class="tag">body</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#595959</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#baymax</span> <span class="rules">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*设置为 居中*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span> auto</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*高度*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">600px</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*隐藏溢出*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">overflow</span>:<span class="value"> hidden</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#head</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">64px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">100px</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*以百分比定义圆角的形状*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">50%</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*背景*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span> auto</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">margin-bottom</span>:<span class="value"> -<span class="number">20px</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*设置下边框的样式*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">border-bottom</span>:<span class="value"> <span class="number">5px</span> solid <span class="hexcolor">#e0e0e0</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*属性设置元素的堆叠顺序；*/</span></span><br><span class="line">    <span class="comment">/*拥有更高堆叠顺序的元素总是会处于堆叠顺序较低的元素的前面*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">z-index</span>:<span class="value"> <span class="number">100</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*生成相对定位的元素*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#eye</span>,</span><br><span class="line"><span class="id">#eye2</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">11px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">13px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#282828</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">50%</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> <span class="number">30px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">27px</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*旋转该元素*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(<span class="number">8deg</span>)</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#eye2</span> <span class="rules">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*使其旋转对称*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(-<span class="number">8deg</span>)</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">69px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> <span class="number">17px</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#mouth</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">38px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">1.5px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#282828</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">34px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> <span class="number">10px</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#torso</span>,</span><br><span class="line"><span class="id">#belly</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span> auto</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">200px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">180px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">47%</span></span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*设置边框*/</span></span><br><span class="line">    <span class="rule"><span class="attribute">border</span>:<span class="value"> <span class="number">5px</span> solid <span class="hexcolor">#e0e0e0</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-top</span>:<span class="value"> none</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">z-index</span>:<span class="value"> <span class="number">1</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#belly</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">300px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">245px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">margin-top</span>:<span class="value"> -<span class="number">140px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">z-index</span>:<span class="value"> <span class="number">5</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#cover</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">190px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">150px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span> auto</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> -<span class="number">20px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">50%</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#heart</span><span class="rules">&#123;</span><br><span class="line">  <span class="rule"><span class="attribute">width</span>:<span class="value"><span class="number">25px</span></span></span>; </span><br><span class="line">  <span class="rule"><span class="attribute">height</span>:<span class="value"><span class="number">25px</span></span></span>; </span><br><span class="line">  <span class="rule"><span class="attribute">border-radius</span>:<span class="value"><span class="number">50%</span></span></span>; </span><br><span class="line">  <span class="rule"><span class="attribute">position</span>:<span class="value">relative</span></span>; </span><br><span class="line"></span><br><span class="line">  <span class="comment">/*向边框四周添加阴影效果*/</span></span><br><span class="line">  <span class="rule"><span class="attribute">box-shadow</span>:<span class="value"><span class="number">2px</span> <span class="number">5px</span> <span class="number">2px</span> <span class="hexcolor">#ccc</span> inset</span></span>; </span><br><span class="line"></span><br><span class="line">  <span class="rule"><span class="attribute">right</span>:<span class="value">-<span class="number">115px</span></span></span>; </span><br><span class="line">  <span class="rule"><span class="attribute">top</span>:<span class="value"><span class="number">40px</span></span></span>; </span><br><span class="line">  <span class="rule"><span class="attribute">z-index</span>:<span class="value"><span class="number">111</span></span></span>; </span><br><span class="line">  <span class="rule"><span class="attribute">border</span>:<span class="value"><span class="number">1px</span> solid <span class="hexcolor">#ccc</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#left-arm</span>,</span><br><span class="line"><span class="id">#right-arm</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">270px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">120px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">50%</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span> auto</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> -<span class="number">350px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> -<span class="number">100px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(<span class="number">20deg</span>)</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">z-index</span>:<span class="value"> -<span class="number">1</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#right-arm</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(-<span class="number">20deg</span>)</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">100px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> -<span class="number">620px</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="id">#l-bigfinger</span>,</span><br><span class="line"><span class="id">#r-bigfinger</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">50px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">20px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">50%</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> <span class="number">250px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">50px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(-<span class="number">50deg</span>)</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#r-bigfinger</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">50px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(<span class="number">50deg</span>)</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#l-smallfinger</span>,</span><br><span class="line"><span class="id">#r-smallfinger</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">35px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">15px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">50%</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> <span class="number">195px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">66px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(-<span class="number">40deg</span>)</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#r-smallfinger</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(<span class="number">40deg</span>)</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> <span class="number">195px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">37px</span></span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#left-leg</span>,</span><br><span class="line"><span class="id">#right-leg</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">height</span>:<span class="value"> <span class="number">170px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">90px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"> <span class="number">40%</span> <span class="number">30%</span> <span class="number">10px</span> <span class="number">45%</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> -<span class="number">640px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> -<span class="number">45px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(-<span class="number">1deg</span>)</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">z-index</span>:<span class="value"> -<span class="number">2</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span> auto</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="id">#right-leg</span> <span class="rules">&#123;</span><br><span class="line">    <span class="rule"><span class="attribute">background</span>:<span class="value"> <span class="hexcolor">#fff</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">border-radius</span>:<span class="value"><span class="number">30%</span> <span class="number">40%</span> <span class="number">45%</span> <span class="number">10px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">margin</span>:<span class="value"> <span class="number">0</span> auto</span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">top</span>:<span class="value"> -<span class="number">810px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">left</span>:<span class="value"> <span class="number">50px</span></span></span>;</span><br><span class="line">    <span class="rule"><span class="attribute">transform</span>:<span class="value"> <span class="function">rotate</span>(<span class="number">1deg</span>)</span></span>;</span><br><span class="line">&#125;</span></span><br><span class="line"></span><br><span class="line"></span><span class="tag">&lt;/<span class="title">style</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="title">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="title">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"baymax"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">&lt;!-- 定义头部，包括两个眼睛、嘴 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"head"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"eye"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"eye2"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"mouth"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">&lt;!-- 定义躯干，包括心脏 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"torso"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"heart"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">&lt;!-- 定义肚子腹部，包括 cover（和躯干的连接处） --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"belly"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"cover"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">&lt;!-- 定义左臂，包括一大一小两个手指 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"left-arm"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"l-bigfinger"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"l-smallfinger"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">&lt;!-- 定义右臂，同样包括一大一小两个手指 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"right-arm"</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"r-bigfinger"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"r-smallfinger"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">&lt;!-- 定义左腿 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"left-leg"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">&lt;!-- 定义右腿 --&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"right-leg"</span>&gt;</span><span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;/<span class="title">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="title">body</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></span><br></pre></td></tr></table></figure>]]></content>
     <summary type="html">
@@ -667,8 +740,8 @@
     <title><![CDATA[Struts 框架教程]]></title>
     <link href="http://henng.com/2015/05/10/struts/"/>
     <id>http://henng.com/2015/05/10/struts/</id>
-    <published>2015-05-10T03:07:28.000Z</published>
-    <updated>2016-04-23T10:43:10.000Z</updated>
+    <published>2015-05-10T11:07:28.000Z</published>
+    <updated>2016-04-23T10:43:10.055Z</updated>
     <content type="html"><![CDATA[<p>Struts 是Apache软件基金会（ASF）赞助的一个开源项目。通过采用JavaServlet/JSP技术，实现了基于Java EEWeb应用的MVC设计模式的应用框架，是MVC经典设计模式中的一个经典产品。</p>
 <p>点这里学习：<a href="https://www.shiyanlou.com/courses/32" target="_blank" rel="external">Struts 框架教程</a><a id="more"></a></p>
 ]]></content>
@@ -688,8 +761,8 @@
     <title><![CDATA[Java 常用设计模式]]></title>
     <link href="http://henng.com/2015/04/26/design-pattern/"/>
     <id>http://henng.com/2015/04/26/design-pattern/</id>
-    <published>2015-04-26T12:03:54.000Z</published>
-    <updated>2016-04-23T10:43:41.000Z</updated>
+    <published>2015-04-26T20:03:54.000Z</published>
+    <updated>2016-04-23T10:43:41.299Z</updated>
     <content type="html"><![CDATA[<p>也是我在 <a href="https://www.shiyanlou.com/" target="_blank" rel="external">实验楼</a> 写的，涉及了常用的设计模式，包括工厂模式、抽象工厂模式、适配器模式、装饰者模式、观察者模式以及单例模式。</p>
 <p>点这里学习：<a href="https://www.shiyanlou.com/courses/100" target="_blank" rel="external">Java进阶之设计模式</a><a id="more"></a></p>
 ]]></content>
@@ -711,8 +784,8 @@
     <title><![CDATA[Hadoop HBase Hive Mahout 全系列教程]]></title>
     <link href="http://henng.com/2015/04/26/hadoop-all/"/>
     <id>http://henng.com/2015/04/26/hadoop-all/</id>
-    <published>2015-04-26T11:05:58.000Z</published>
-    <updated>2015-07-06T17:52:50.000Z</updated>
+    <published>2015-04-26T19:05:58.000Z</published>
+    <updated>2015-07-06T17:52:50.131Z</updated>
     <content type="html"><![CDATA[<p>最近在 <a href="https://www.shiyanlou.com/" target="_blank" rel="external">实验楼</a> 实习，写了些东西。最先接触的是 Hadoop 系列，但我接手的时候是从 HBase 开始写的。不过，首先要学习的就是 Hadoop。</p>
 <ul>
 <li><h3 id="Hadoop">Hadoop</h3></li>
@@ -773,8 +846,8 @@
     <title><![CDATA[那个偷吃鱼皮花生的男孩]]></title>
     <link href="http://henng.com/2015/03/14/the-boy/"/>
     <id>http://henng.com/2015/03/14/the-boy/</id>
-    <published>2015-03-14T05:54:15.000Z</published>
-    <updated>2016-04-23T07:54:17.000Z</updated>
+    <published>2015-03-14T13:54:15.000Z</published>
+    <updated>2016-04-23T07:54:17.431Z</updated>
     <content type="html"><![CDATA[<p>想写这篇，已经很久了。</p>
 <p>不知道为什么，现在才开始动笔。</p>
 <p>以前我好像不怎么想家的，今年回学校几天，竟然有点想家。想想原因，可能是以前回去的地方，都不能被称为家吧。拆迁之后，一直是在外面租的房子，这次过年终于回居，虽然一切都不再一样，但这才是永远的居所。<a id="more"></a></p>
@@ -803,8 +876,8 @@
     <title><![CDATA[奇妙能力歌]]></title>
     <link href="http://henng.com/2014/12/09/qimiaonenglige/"/>
     <id>http://henng.com/2014/12/09/qimiaonenglige/</id>
-    <published>2014-12-09T05:26:05.000Z</published>
-    <updated>2015-07-06T17:52:50.000Z</updated>
+    <published>2014-12-09T13:26:05.000Z</published>
+    <updated>2015-07-06T17:52:50.131Z</updated>
     <content type="html"><![CDATA[<p>我看过沙漠下暴雨<br>看过大海亲吻鲨鱼<br>看过黄昏追逐黎明<br>没看过你</p>
 <p>我知道美丽会老去<br>生命之外还有生命<br>我知道风里有诗句<br>不知道你<br><a id="more"></a></p>
 <p>我听过荒芜变成热闹<br>听过尘埃掩埋城堡<br>听过天空拒绝飞鸟<br>没听过你</p>
@@ -830,33 +903,6 @@
       <category term="陈粒" scheme="http://henng.com/tags/%E9%99%88%E7%B2%92/"/>
     
       <category term="生活" scheme="http://henng.com/categories/%E7%94%9F%E6%B4%BB/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[《搏击俱乐部》台词]]></title>
-    <link href="http://henng.com/2014/11/13/fight-club/"/>
-    <id>http://henng.com/2014/11/13/fight-club/</id>
-    <published>2014-11-13T14:11:29.000Z</published>
-    <updated>2016-04-23T07:59:45.000Z</updated>
-    <content type="html"><![CDATA[<p><img src="http://static.zybuluo.com/Henry/07vuqud3hjt8nbg274qa6a9x/fight_club_1.jpg" alt=""><a id="more"></a></p>
-<p><img src="http://static.zybuluo.com/Henry/h8s5l8foj4sxd4qj09406s7p/fight_club_2.jpg" alt=""></p>
-<p><img src="http://static.zybuluo.com/Henry/mymu286gjja13sak598y54ub/fight_club_3.jpg" alt=""></p>
-<p><img src="http://static.zybuluo.com/Henry/s5a5t8vyi0qo2pnfpknkfu6m/fight_club_4.jpg" alt=""></p>
-<p><img src="http://static.zybuluo.com/Henry/zsek3z7j8e4z626rrxz5pupp/fight_club_5.jpg" alt=""></p>
-<p><img src="http://static.zybuluo.com/Henry/ymnukgngfmtm7uvxxll3d2g7/fight_club_6.jpg" alt=""></p>
-<p><em>from <a href="http://www.douban.com/photos/album/143955885/?start=0" target="_blank" rel="external">翻滚吧！蛋堡的相册</a></em></p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p><img src="http://static.zybuluo.com/Henry/07vuqud3hjt8nbg274qa6a9x/fight_club_1.jpg" alt="">]]>
-    
-    </summary>
-    
-      <category term="文艺" scheme="http://henng.com/tags/%E6%96%87%E8%89%BA/"/>
-    
-      <category term="电影" scheme="http://henng.com/tags/%E7%94%B5%E5%BD%B1/"/>
-    
-      <category term="转载" scheme="http://henng.com/tags/%E8%BD%AC%E8%BD%BD/"/>
     
   </entry>
   
