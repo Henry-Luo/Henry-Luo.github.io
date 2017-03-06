@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Viva La Vida]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://henng.com//"/>
-  <updated>2017-01-20T10:21:17.060Z</updated>
+  <updated>2017-03-06T06:45:04.594Z</updated>
   <id>http://henng.com//</id>
   
   <author>
@@ -14,6 +14,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[使用 TypeHandler 来转换你的 Java 对象]]></title>
+    <link href="http://henng.com/2017/03/06/JsonTypeHandler/"/>
+    <id>http://henng.com/2017/03/06/JsonTypeHandler/</id>
+    <published>2017-03-06T06:40:04.000Z</published>
+    <updated>2017-03-06T06:45:04.594Z</updated>
+    <content type="html"><![CDATA[<p>有时，我们有这样的场景或需求。例如某种平台上有各种各样的申请，如果你给每一种申请单独维护一张表，虽然看似简单，但是管理起来数量多也麻烦。如果以后有新的申请又得新建表，涉及到数据库的操作，几乎所有的公司都有一套复杂且严格的流程或手续，所以拓展起来也不是那么方便了。<br><a id="more"></a><br>于是，自然想到维护一张统一的表，该表其中一个字段 (varchar) 对应各种不同申请。这就引出了这样一个问题，“如何在不同的 Java 对象(每种申请对应一个 Java 对象)，与数据库的 varchar 之间互相转换呢？”</p>
+<p>这里，我们使用 Mybatis 的 TypeHandler 来解决这个问题。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&lt;resultMap type="com.test.xxx.MyClass" id="FindResult"&gt;</span><br><span class="line">    &lt;result property="id" column="id"/&gt;</span><br><span class="line">    &lt;result property="code" column="code"/&gt;</span><br><span class="line">    &lt;result property="type" column="type"/&gt;</span><br><span class="line">    &lt;result property="applyContent" column="apply_content"  typeHandler="com.test.xxx.mybatis.handler.JsonTypeHandler"/&gt;</span><br><span class="line">&lt;/resultMap&gt;</span><br><span class="line"></span><br><span class="line">&lt;insert id="add" parameterType="com.test.xxx.MyClass"&gt;    </span><br><span class="line">    INSERT INTO apply (</span><br><span class="line">        code, </span><br><span class="line">        type,  </span><br><span class="line">        apply_content)</span><br><span class="line">    VALUES (</span><br><span class="line">        #&#123;code, jdbcType=VARCHAR&#125;,</span><br><span class="line">        #&#123;type, jdbcType=INTEGER&#125;,</span><br><span class="line">        #&#123;applyContent, jdbcType=VARCHAR,  typeHandler=com.test.xxx.mybatis.handler.JsonTypeHandler&#125;)</span><br><span class="line">&lt;/insert&gt;</span><br><span class="line"></span><br><span class="line">&lt;select id="findById" resultMap="FindResult"&gt;</span><br><span class="line">    SELECT id, code, type, apply_content AS applyContent </span><br><span class="line">    FROM apply</span><br><span class="line">    WHERE id = #&#123;id&#125;</span><br><span class="line">&lt;/select&gt;</span><br></pre></td></tr></table></figure>
+<p>其中的 apply_content 字段就对应各种申请，需要指定 TypeHandler 来转换。那么 JsonTypeHandler 又是什么样的呢？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">// 自定义的 Handler 都继承自 BaseTypeHandler&lt;Object&gt; </span></span><br><span class="line"><span class="comment">// 使用 Object 是为了处理不同类型，你也可以定义所有类型的公共父类或接口来代替 Object</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JsonTypeHandler</span> <span class="keyword">extends</span> <span class="title">BaseTypeHandler</span>&lt;<span class="title">Object</span>&gt; </span>&#123;</span><br><span class="line">  <span class="annotation">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setNonNullParameter</span><span class="params">(PreparedStatement preparedStatement, <span class="keyword">int</span> i, Object parameter, JdbcType jdbcType)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    preparedStatement.setString(i, JSON.toJSONString(parameter));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="annotation">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">getNullableResult</span><span class="params">(ResultSet resultSet, String columnName)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">      Apply.Type type = Apply.Type.valueOf(resultSet.getString(<span class="string">"type"</span>));</span><br><span class="line">      <span class="keyword">return</span> JSON.parseObject(resultSet.getString(columnName), getClassByType(type));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="annotation">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">getNullableResult</span><span class="params">(ResultSet resultSet, <span class="keyword">int</span> columnIndex)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">      Apply.Type type = Apply.Type.valueOf(resultSet.getString(<span class="string">"type"</span>));</span><br><span class="line">      <span class="keyword">return</span> JSON.parseObject(resultSet.getString(columnIndex), getClassByType(type));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="annotation">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">getNullableResult</span><span class="params">(CallableStatement callableStatement, <span class="keyword">int</span> columnIndex)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">      Apply.Type type = Apply.Type.valueOf(callableStatement.getString(<span class="string">"type"</span>));</span><br><span class="line">      <span class="keyword">return</span> JSON.parseObject(callableStatement.getString(columnIndex), getClassByType(type));</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> Class&lt;? extends Object&gt; getClassByType(Apply.Type type) &#123;</span><br><span class="line">      <span class="keyword">switch</span> (type) &#123;</span><br><span class="line">          <span class="keyword">case</span> APPLY_TYPE_1:</span><br><span class="line">              <span class="keyword">return</span> ApplyType1.class;</span><br><span class="line">          <span class="keyword">case</span> APPLY_TYPE_2:</span><br><span class="line">              <span class="keyword">return</span> ApplyType2.class;</span><br><span class="line">          <span class="keyword">case</span> APPLY_TYPE_3:</span><br><span class="line">              <span class="keyword">return</span> ApplyType3.class;</span><br><span class="line">          <span class="keyword">default</span>:</span><br><span class="line">              <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，使用 Json (Json 序列化可以选择 FastJson 等)来序列化成字符串，往数据库里存，对应 varchar。取出来的时候，在 Handler 内部处理逻辑中，根据 type 拿到类型，再转换成了相应的对象。这里有点遗憾，需要自己根据类型再判断转换，如果能自己找到类型进行转换就完美了。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>有时，我们有这样的场景或需求。例如某种平台上有各种各样的申请，如果你给每一种申请单独维护一张表，虽然看似简单，但是管理起来数量多也麻烦。如果以后有新的申请又得新建表，涉及到数据库的操作，几乎所有的公司都有一套复杂且严格的流程或手续，所以拓展起来也不是那么方便了。<br>]]>
+    
+    </summary>
+    
+      <category term="Java" scheme="http://henng.com/tags/Java/"/>
+    
+      <category term="MyBatis" scheme="http://henng.com/tags/MyBatis/"/>
+    
+      <category term="SQL" scheme="http://henng.com/tags/SQL/"/>
+    
+      <category term="原创" scheme="http://henng.com/tags/%E5%8E%9F%E5%88%9B/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[BookKeeper]]></title>
@@ -867,40 +895,6 @@
       <category term="原创" scheme="http://henng.com/tags/%E5%8E%9F%E5%88%9B/"/>
     
       <category term="生活" scheme="http://henng.com/tags/%E7%94%9F%E6%B4%BB/"/>
-    
-      <category term="生活" scheme="http://henng.com/categories/%E7%94%9F%E6%B4%BB/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[奇妙能力歌]]></title>
-    <link href="http://henng.com/2014/12/09/qimiaonenglige/"/>
-    <id>http://henng.com/2014/12/09/qimiaonenglige/</id>
-    <published>2014-12-09T13:26:05.000Z</published>
-    <updated>2015-07-06T17:52:50.131Z</updated>
-    <content type="html"><![CDATA[<p>我看过沙漠下暴雨<br>看过大海亲吻鲨鱼<br>看过黄昏追逐黎明<br>没看过你</p>
-<p>我知道美丽会老去<br>生命之外还有生命<br>我知道风里有诗句<br>不知道你<br><a id="more"></a></p>
-<p>我听过荒芜变成热闹<br>听过尘埃掩埋城堡<br>听过天空拒绝飞鸟<br>没听过你</p>
-<p>我明白眼前都是气泡<br>安静的才是苦口良药<br>明白什么才让我骄傲<br>不明白你</p>
-<p>我拒绝更好更圆的月亮<br>拒绝未知的疯狂<br>拒绝声色的张扬<br>不拒绝你</p>
-<p>我变成荒凉的景象<br>变成无所谓的模样<br>变成透明的高墙<br>没能变成你</p>
-<p>我听过空境的回音<br>雨水浇绿孤山岭<br>听过被诅咒的秘密<br>没听过你</p>
-<p>我抓住散落的欲望<br>缱绻的馥郁让我紧张<br>我抓住世间的假象<br>没抓住你</p>
-<p>我包容六月清泉结冰<br>包容不老的生命<br>包容世界的迟疑<br>没包容你</p>
-<p>我忘了置身濒绝孤岛<br>忘了眼泪不过失效药<br>忘了百年无声口号<br>没能忘记你</p>
-<p>我想要更好更圆的月亮<br>想要未知的疯狂<br>想要声色的张扬<br>我想要你</p>
-<embed src="http://www.xiami.com/widget/11097325_1773565409/singlePlayer.swf" type="application/x-shockwave-flash" width="257" height="33" wmode="transparent">]]></content>
-    <summary type="html">
-    <![CDATA[<p>我看过沙漠下暴雨<br>看过大海亲吻鲨鱼<br>看过黄昏追逐黎明<br>没看过你</p>
-<p>我知道美丽会老去<br>生命之外还有生命<br>我知道风里有诗句<br>不知道你<br>]]>
-    
-    </summary>
-    
-      <category term="song" scheme="http://henng.com/tags/song/"/>
-    
-      <category term="民谣" scheme="http://henng.com/tags/%E6%B0%91%E8%B0%A3/"/>
-    
-      <category term="陈粒" scheme="http://henng.com/tags/%E9%99%88%E7%B2%92/"/>
     
       <category term="生活" scheme="http://henng.com/categories/%E7%94%9F%E6%B4%BB/"/>
     
