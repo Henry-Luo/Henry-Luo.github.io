@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://henng.com/about/index.html</loc>
+    <lastmod>2017-03-11T16:19:45.122Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://henng.com/2017/03/06/JsonTypeHandler/</loc>
     <lastmod>2017-03-06T06:45:04.594Z</lastmod>
   </url>
@@ -24,11 +29,6 @@
   <url>
     <loc>http://henng.com/2016/11/19/pulsar-intro/</loc>
     <lastmod>2016-11-19T15:23:34.083Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://henng.com/about/index.html</loc>
-    <lastmod>2016-09-17T06:56:55.650Z</lastmod>
   </url>
   
   <url>
