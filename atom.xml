@@ -5,7 +5,7 @@
   <subtitle><![CDATA[Viva La Vida]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://henng.com//"/>
-  <updated>2017-03-06T06:45:04.594Z</updated>
+  <updated>2017-04-02T09:30:35.244Z</updated>
   <id>http://henng.com//</id>
   
   <author>
@@ -14,6 +14,35 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[再见多说｜Hello Disqus]]></title>
+    <link href="http://henng.com/2017/04/02/duoshuo2disqus/"/>
+    <id>http://henng.com/2017/04/02/duoshuo2disqus/</id>
+    <published>2017-04-02T08:57:54.000Z</published>
+    <updated>2017-04-02T09:30:35.244Z</updated>
+    <content type="html"><![CDATA[<p>“多说” 是国内使用率很高的评论组件，然而前段时间，该评论组件变得不太稳定，且涌入大量垃圾广告评论，最重要的，它似乎没有盈利。于是这个结局也就不出意料了，多说在3月21号宣布即将关闭：<a href="http://dev.duoshuo.com/threads/58d1169ae293b89a20c57241" target="_blank" rel="external">重要通知: 多说即将关闭</a> 。 <a id="more"></a></p>
+<p>这下毫不犹豫决定迁移到 Disqus 了。之前选择多说，一是因为本地化做得好，二是局域网内访问良好。可现在才发现，能长久提供稳定的服务才是最重要的，毕竟数据迁移的成本相当大。只是现在你可能需要一把梯子来访问 Disqus 了。</p>
+<p>Disqus 接入很简单，和多说差不多，把 JS 代码插入到需要展示评论框的页面就行了。只是注意 url 和 identifier 的唯一性。</p>
+<p>本以为迁移到 Disqus，原来的那些多说评论就丢了，因为二者不能直接互相导入导出。搜索一番，发现已有解决方案。思路是解析多说评论数据，再生成可导入到 Disqus 的 WordPress 评论结构 XML。这里分享一个方法：<a href="https://urouge.github.io/migrate-to-disqus/" target="_blank" rel="external">多说评论迁移至Disqus</a> ，里面有使用方法介绍，感谢这位博主分享的方法。忽然想到，自己写一个程序解析的话，估计又得上 Java，这么一想还是脚本语言方便啊，看来得学个 PHP 或者 Python 了。</p>
+<p>再见多说｜Hello Disqus .</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>“多说” 是国内使用率很高的评论组件，然而前段时间，该评论组件变得不太稳定，且涌入大量垃圾广告评论，最重要的，它似乎没有盈利。于是这个结局也就不出意料了，多说在3月21号宣布即将关闭：<a href="http://dev.duoshuo.com/threads/58d1169ae293b89a20c57241">重要通知: 多说即将关闭</a> 。]]>
+    
+    </summary>
+    
+      <category term="Hexo" scheme="http://henng.com/tags/Hexo/"/>
+    
+      <category term="blog" scheme="http://henng.com/tags/blog/"/>
+    
+      <category term="disqus" scheme="http://henng.com/tags/disqus/"/>
+    
+      <category term="多说" scheme="http://henng.com/tags/%E5%A4%9A%E8%AF%B4/"/>
+    
+      <category term="评论" scheme="http://henng.com/tags/%E8%AF%84%E8%AE%BA/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[使用 TypeHandler 来转换你的 Java 对象]]></title>
@@ -867,36 +896,6 @@
       <category term="大数据" scheme="http://henng.com/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/"/>
     
       <category term="推荐系统" scheme="http://henng.com/tags/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[那个偷吃鱼皮花生的男孩]]></title>
-    <link href="http://henng.com/2015/03/14/the-boy/"/>
-    <id>http://henng.com/2015/03/14/the-boy/</id>
-    <published>2015-03-14T13:54:15.000Z</published>
-    <updated>2016-04-23T07:54:17.431Z</updated>
-    <content type="html"><![CDATA[<p>想写这篇，已经很久了。</p>
-<p>不知道为什么，现在才开始动笔。</p>
-<p>以前我好像不怎么想家的，今年回学校几天，竟然有点想家。想想原因，可能是以前回去的地方，都不能被称为家吧。拆迁之后，一直是在外面租的房子，这次过年终于回居，虽然一切都不再一样，但这才是永远的居所。<a id="more"></a></p>
-<p>忘了是哪天，在超市里见到一包鱼皮花生就买回来了。</p>
-<p>我小时候很贪吃的，可能男孩子都比较调皮和好奇。我奶奶说过我很小的时候，经常在她们还在做饭的时候，拿案板上的肉吃，然后我就吃腻了以致于我后来都不爱吃肉。爷爷呢经常买一些吃的，就着喝点小酒。有一次我发现他床边的柜子上挂着一袋东西，摸了摸、看了看发现是一袋鱼皮花生。我立马就扣了个洞，小心翼翼勾出来一两个。为了不被发现，我每次都只吃一两个，然后我都不知道这样过了好多天，爷爷忽然发现他的零食怎么不对劲，我都不敢说是我干的坏事。</p>
-<p>于是我想起来那个老房子。三层，两通。门前一个庭院，有各种果树和花木。小的时候有个夜晚玩捉迷藏，我很精灵的爬上院子里那棵樱桃树上，结果小伙伴怎么都找不到我，还是我自己忍不住笑，最后自己下来了。那株芦荟曾帮助叔叔缓解过烫伤，我养的仙人掌当时已经比我还高，桔子柚子自然不少，野生枇杷太小我都懒得吃，杏子、李子和樱桃总是招来各种尖嘴的鸟类，头顶一片葡萄藤是夏日最佳的消暑场所。</p>
-<p>失去是一种常态。无论是你曾坚定不移的，还是你根本没在乎的。今年回家去，爷爷早已不再喝酒了，中风让他行动不便；奶奶身体也大不如从前。新的房子，好像也没有从前的热闹。</p>
-<p>而那个偷吃鱼皮花生的男孩，已经为他们削过好多次水果皮。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>想写这篇，已经很久了。</p>
-<p>不知道为什么，现在才开始动笔。</p>
-<p>以前我好像不怎么想家的，今年回学校几天，竟然有点想家。想想原因，可能是以前回去的地方，都不能被称为家吧。拆迁之后，一直是在外面租的房子，这次过年终于回居，虽然一切都不再一样，但这才是永远的居所。]]>
-    
-    </summary>
-    
-      <category term="原创" scheme="http://henng.com/tags/%E5%8E%9F%E5%88%9B/"/>
-    
-      <category term="生活" scheme="http://henng.com/tags/%E7%94%9F%E6%B4%BB/"/>
-    
-      <category term="生活" scheme="http://henng.com/categories/%E7%94%9F%E6%B4%BB/"/>
     
   </entry>
   

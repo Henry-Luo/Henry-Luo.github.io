@@ -1,0 +1,23 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="description" content="何恩 何恩之有 HenryLuo Henry Luo Blog 生活 项目 编程 henng h3nng"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="alternative" href="http://henng.com/atom.xml" title="HENNG" type="application/atom+xml"><link rel="icon" href="http://henng.com/images/favicon.ico"><title>再见多说｜Hello Disqus - HENNG</title><link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro"><link rel="stylesheet" href="/css/main.css" type="text/css"><!--[if lt IE 9]><script>(function(a,b){a="abbr article aside audio bdi canvas data datalist details dialog figcaption figure footer header hgroup main mark meter nav output progress section summary template time video".split(" ");for(b=a.length-1;b>=0;b--)document.createElement(a[b])})()</script><![endif]--></head><body><header class="head"><h1 class="head-title u-fl"><a href="/">HENNG</a></h1><nav class="head-nav u-fr"><ul class="head-nav__list"><li class="head-nav__item"><a href="/" class="head-nav__link">HOME</a></li><li class="head-nav__item"><a href="/archives" class="head-nav__link">ARCHIVES</a></li><li class="head-nav__item"><a href="/about" class="head-nav__link">ABOUT</a></li></ul></nav></header><main class="main"><article class="post"><header class="post__head"><time datetime="2017-04-02T08:57:54.000Z" class="post__time">四月 2, 2017</time><h1 class="post__title"><a href="/2017/04/02/duoshuo2disqus/">再见多说｜Hello Disqus</a></h1></header><div class="post__main echo"><p>“多说” 是国内使用率很高的评论组件，然而前段时间，该评论组件变得不太稳定，且涌入大量垃圾广告评论，最重要的，它似乎没有盈利。于是这个结局也就不出意料了，多说在3月21号宣布即将关闭：<a href="http://dev.duoshuo.com/threads/58d1169ae293b89a20c57241" target="_blank" rel="external">重要通知: 多说即将关闭</a> 。 <a id="more"></a></p>
+<p>这下毫不犹豫决定迁移到 Disqus 了。之前选择多说，一是因为本地化做得好，二是局域网内访问良好。可现在才发现，能长久提供稳定的服务才是最重要的，毕竟数据迁移的成本相当大。只是现在你可能需要一把梯子来访问 Disqus 了。</p>
+<p>Disqus 接入很简单，和多说差不多，把 JS 代码插入到需要展示评论框的页面就行了。只是注意 url 和 identifier 的唯一性。</p>
+<p>本以为迁移到 Disqus，原来的那些多说评论就丢了，因为二者不能直接互相导入导出。搜索一番，发现已有解决方案。思路是解析多说评论数据，再生成可导入到 Disqus 的 WordPress 评论结构 XML。这里分享一个方法：<a href="https://urouge.github.io/migrate-to-disqus/" target="_blank" rel="external">多说评论迁移至Disqus</a> ，里面有使用方法介绍，感谢这位博主分享的方法。忽然想到，自己写一个程序解析的话，估计又得上 Java，这么一想还是脚本语言方便啊，看来得学个 PHP 或者 Python 了。</p>
+<p>再见多说｜Hello Disqus .</p>
+</div><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a href="/tags/Hexo/" class="post__tag__link">Hexo</a></li><li class="post__tag__item"><a href="/tags/blog/" class="post__tag__link">blog</a></li><li class="post__tag__item"><a href="/tags/disqus/" class="post__tag__link">disqus</a></li><li class="post__tag__item"><a href="/tags/多说/" class="post__tag__link">多说</a></li><li class="post__tag__item"><a href="/tags/评论/" class="post__tag__link">评论</a></li></ul><a href="/2017/04/02/duoshuo2disqus/#disqus_thread" class="post__foot-link u-fr"></a></footer></article><div class="comments"><div id="disqus_thread"><script>var disqus_config = function () {
+this.page.url = page.permalink;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = page.title; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://henng.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script></div></div></main><footer class="foot"><div class="foot-copy u-fl">&copy; 2017 henng<bdi> | Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> with theme <a href="https://github.com/henng/lesss" target="_blank">lesss</a> based on <a href="https://github.com/unmric/hexo-theme-strict" target="_blank">strict</a></bdi></div><menu class="page-menu u-fr"><li class="page-menu__item"><span title="Previous" class="page-menu__link icon-arrow-left page-menu__link--disabled"> </span></li><li class="page-menu__item"><a title="Next" href="/2017/03/06/JsonTypeHandler/" class="page-menu__link icon-arrow-right"> </a></li></menu></footer><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-54955970-2', 'auto');
+ga('send', 'pageview');
+</script></body></html>
