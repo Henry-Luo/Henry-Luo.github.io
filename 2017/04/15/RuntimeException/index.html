@@ -1,0 +1,21 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="description" content="何恩 何恩之有 HenryLuo Henry Luo Blog 生活 项目 编程 henng h3nng"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="alternative" href="http://henng.com/atom.xml" title="HENNG" type="application/atom+xml"><link rel="icon" href="http://henng.com/images/favicon.ico"><title>RuntimeException - HENNG</title><link rel="stylesheet" href="//fonts.googleapis.com/css?family=Source+Code+Pro"><link rel="stylesheet" href="/css/main.css" type="text/css"><!--[if lt IE 9]><script>(function(a,b){a="abbr article aside audio bdi canvas data datalist details dialog figcaption figure footer header hgroup main mark meter nav output progress section summary template time video".split(" ");for(b=a.length-1;b>=0;b--)document.createElement(a[b])})()</script><![endif]--></head><body><header class="head"><h1 class="head-title u-fl"><a href="/">HENNG</a></h1><nav class="head-nav u-fr"><ul class="head-nav__list"><li class="head-nav__item"><a href="/" class="head-nav__link">HOME</a></li><li class="head-nav__item"><a href="/archives" class="head-nav__link">ARCHIVES</a></li><li class="head-nav__item"><a href="/about" class="head-nav__link">ABOUT</a></li></ul></nav></header><main class="main"><article class="post"><header class="post__head"><time datetime="2017-04-15T07:40:43.000Z" class="post__time">四月 15, 2017</time><h1 class="post__title"><a href="/2017/04/15/RuntimeException/">RuntimeException</a></h1></header><div class="post__main echo"><p>写这篇文章之前，还是感到很惭愧的。毕竟没什么难度，只是因为自己之前的基础不够扎实，不了解这个知识点罢了。所以还是要记录一下，加强记忆好好长长记性，鞭策自己。<a id="more"></a></p>
+<p>起因是阅读一个第三方的 SDK 代码，来寻找其中的潜在 BUG。发现有一段代码抛出了异常，却没有使用 try/catch 捕获，也没有直接再抛出，感到有点疑惑。后来查阅了相关资料才发现，代码里面的自定义异常是继承的 RuntimeException，RuntimeException 表示运行时异常，是一种 unchecked exception，可以不捕获这种异常。通常也不建议捕获 RuntimeException 异常，因为它代表了一种意料之外的、本不该发生的异常，代表程序中有 BUG，catch RuntimeException 的意义不大，而应该去修复它。相比于我们经常需要 try/catch 的 checked exception，这是主要的不同之处。</p>
+<p>好了，现在清楚了。另外最开始提到的 BUG 也找到了，使用 HTTP 连接池一定要注意连接泄露，这个以后有空再写啦。</p>
+</div><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a href="/tags/Java/" class="post__tag__link">Java</a></li><li class="post__tag__item"><a href="/tags/原创/" class="post__tag__link">原创</a></li></ul><a href="/2017/04/15/RuntimeException/#disqus_thread" class="post__foot-link u-fr"></a></footer></article><div class="comments"><div id="disqus_thread"><script>var disqus_config = function () {
+this.page.url = page.permalink;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = page.title; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://henng.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script></div></div></main><footer class="foot"><div class="foot-copy u-fl">&copy; 2017 henng<bdi> | Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> with theme <a href="https://github.com/henng/lesss" target="_blank">lesss</a> based on <a href="https://github.com/unmric/hexo-theme-strict" target="_blank">strict</a></bdi></div><menu class="page-menu u-fr"><li class="page-menu__item"><span title="Previous" class="page-menu__link icon-arrow-left page-menu__link--disabled"> </span></li><li class="page-menu__item"><a title="Next" href="/2017/04/02/duoshuo2disqus/" class="page-menu__link icon-arrow-right"> </a></li></menu></footer><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-54955970-2', 'auto');
+ga('send', 'pageview');
+</script></body></html>
